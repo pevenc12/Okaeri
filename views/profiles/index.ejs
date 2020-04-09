@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <title>Okaeri</title>
+</head>
+<body>
+  <div class="container">
+    <ul class="nav nav-pills nav-fill">
+      <li class="nav-item">
+        <a class="nav-link" href="/">Index</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" href="/profiles/<%= user.id %>">Profile</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/news">News</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/search">Search User</a>
+      </li>
+      <li class="nav-item">
+        <form action="/users/logout?_method=DELETE" method="POST">
+          <button type="submit" class="nav-link">Log out</button>
+        </form>
+        </li>
+    </ul>
+    <h2><%= user.name %> </h2>
+    <% if (!user.alreadyFriend){ %>
+      <% if (user.alreadySentRequest) {%>
+        <form action="/profiles/friendrequest/<%= user.id %>?_method=DELETE" method="POST">
+          <button type="submit" class="btn btn-light">Withdraw Friend Request</button>
+        </form>
+      <% }else{ %> 
+        <form action="/profiles/friendrequest/<%= user.id %>" method="POST">
+          <button type="submit" class="btn btn-light">Send Friend Request</button>
+        </form>
+      <% } %> 
+    <% } else if (!user.myself){ %>
+      <form action="/profiles/friendship/<%= user.id %>?_method=DELETE" method="POST">
+        <button type="submit" class="btn btn-light">Remove from Friends</button>
+      </form>
+    <% } %> 
+
+    <% if (user.friendRequests.length>0){ %>
+      <h5>new friend request from...</h5> 
+    <% } %>  
+
+    <% user.friendRequests.forEach( request => { %>
+      <div class="card my-2">
+        <div class="card-body">
+          <div class="card-text mb-2"><%= request.name %></div>
+        </div>
+        <div class="card-footer">
+          <div class="btn-group">
+            <form action="/profiles/friendconfirm/<%= request.id %>" method="POST">
+              <button type="submit" class="btn btn-outline-primary">Confirm</button>
+            </form>
+            <form action="/profiles/friendconfirm/<%= request.id %>?_method=DELETE" method="POST">
+              <button type="submit" class="btn btn-outline-secondary">Ignore</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+
+
+    <h4 class="text-muted my-1">Recent Post</h4>
+    <% user.articles.forEach( article => { %>
+      <div class="card my-4">
+        <div class="card-body">
+          <h4 class="card-title"><%= user.name %></h4>
+          <div class="card-subtitle text-muted mb-2">
+              <%= article.created.toLocaleString() %> 
+          </div>
+          <div class="card-text mb-2"><%= article.content %> </div>
+        </div>
+      </div>
+    <% }) %>
+
+
+  </div>
+</body>
+</html>
