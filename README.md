@@ -9,6 +9,9 @@ https://okaeri-tw.herokuapp.com/
 ## Functions
 
 + Post, edit, or delete your article
-+ Send friend request to make new friends
++ Find if your friends are using Okaeri
++ Send friend requests to make new friends
++ Ignore friend requests from strangers
 + See what your firends recently post on index page
-+ See the news
++ Like and reply to your friends post
++ See local news
