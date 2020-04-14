@@ -72,10 +72,10 @@
     <% user.articles.forEach( article => { %>
       <div class="card my-4">
         <div class="card-body">
-          <h4 class="card-title"><%= user.name %></h4>
-          <div class="card-subtitle text-muted mb-2">
-              <%= article.created.toLocaleString() %> 
-          </div>
+          <h4 class="card-title"><a href="/profiles/<%= user.id %>"><%= user.name %></a></h4>
+            <a href="/articles/show/<%= article.id %>" class="card-subtitle text-muted">
+              <%= article.created.toLocaleString() %>
+            </a>
           <div class="card-text mb-2"><%= article.content %> </div>
         </div>
       </div>

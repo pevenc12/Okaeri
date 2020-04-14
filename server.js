@@ -59,9 +59,7 @@ app.use(passport.session())
 app.use(methodOverride('_method'))
 
 app.get('/', checkNotAuthenticated, async (req, res)=>{
-  let user = await client.query(`SELECT id, name, others FROM users
-  WHERE id = '${req.session.passport.user}';`)
-  user = user.rows[0]
+  const user = {id: req.session.passport.user}
   const indexArticls = await findIndexArticles(user.id)
   res.render('index', {user: user, indexArticls: indexArticls})
 })
