@@ -1,6 +1,6 @@
 # Okaeri
 
-This work builds a single social platform, using **Express** as backend framework, **MongoDB** and **Postgresql** as database, **Passport-local** as an authentication method, and **Heroku** as deployment environment.
+This work builds a single social platform, using **Express** as backend framework, **MongoDB** and **Postgresql** as database, **Redis** to perform caching, **Passport-local** as an authentication method, and **Heroku** as deployment environment.
 
 ## Demo
 
