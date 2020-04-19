@@ -15,7 +15,10 @@ const newsRouter = require('./routers/news')
 const searchRouter = require('./routers/search')
 const Relationship = require('./models/relationship')
 
-
+//redis
+const redis = require("redis")
+const redisClient = require("./models/redisclient")
+redisClient.auth(process.env.REDIS_PASS)
 
 //mongoDB
 const mongoose = require('mongoose')
@@ -24,12 +27,11 @@ mongoose.connect(process.env.MONGODB_URL,
 const db = mongoose.connection
 db.on('error', (err)=> console.error(err))
 
-
 //postgresql
 const client = require('./models/pgclient')
 client.connect()
 
-
+//passport
 const initializePassport = require('./auth/passport-config')
 initializePassport(
   passport,
@@ -58,18 +60,39 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
 
-app.get('/', checkNotAuthenticated, async (req, res)=>{
+//index
+app.get('/', checkNotAuthenticated, checkIndexCache, async (req, res)=>{
+  if (req.indexArticles == null){
+    const cacheKey = 'index_' + req.session.passport.user.toString()
+    const indexArticles = await findIndexArticles(req.session.passport.user)
+    redisClient.setex(cacheKey, 300, JSON.stringify(indexArticles))
+    req.indexArticles = indexArticles
+  }
   const user = {id: req.session.passport.user}
-  const indexArticls = await findIndexArticles(user.id)
-  res.render('index', {user: user, indexArticls: indexArticls})
+  res.render('index', {user: user, indexArticles: req.indexArticles})
 })
 
-
+//routers
 app.use('/users', userRouter)
 app.use('/articles', articleRouter)
 app.use('/profiles', profileRouter)
 app.use('/news', newsRouter)
 app.use('/search', searchRouter)
+
+//functions
+function checkIndexCache (req, res, next){
+  const key = 'index_' + req.session.passport.user.toString()
+  redisClient.get(key, (err, data)=>{
+    if (err){
+      res.status(500).send(err)
+    }
+    req.indexArticles = null
+    if (data != null) {
+      req.indexArticles = JSON.parse(data)
+    }
+    next()
+  })
+}
 
 function checkNotAuthenticated(req, res, next){
   if (!req.isAuthenticated()){
