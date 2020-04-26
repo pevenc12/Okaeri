@@ -3,12 +3,14 @@ const router = express.Router()
 const client = require('../models/pgclient')
 const checkService = require('../auth/checkservice')
 const Relationship = require('../models/relationship')
+const redisClient = require("../models/redisclient")
 
 router.post('/:id', checkService, async(req, res)=>{
   try{
     let content = req.body.content.slice(0, 140)
     await client.query(`INSERT INTO articles (user_id, created, content) 
       VALUES ('${req.params.id}', to_timestamp(${Date.now()} / 1000.0), '${content}');`)
+    redisClient.del(`index_${req.session.passport.user}`)
     res.redirect('/')
   }catch{
     res.redirect('/')
@@ -22,6 +24,7 @@ router.put('/:id', checkService, async(req, res)=>{
     const result = client.query(`UPDATE articles 
       SET content = '${req.body.content}', edited = to_timestamp(${Date.now()} / 1000.0)
       WHERE id = ${article.id};`)
+    redisClient.del(`index_${req.session.passport.user}`)
     res.redirect('/')
   }catch{
     res.redirect('/')
@@ -32,8 +35,9 @@ router.delete('/:id', checkService, async(req, res)=>{
   try{
     const article = await checkUser(req.session.passport.user, parseInt(req.params.id))
     if (article == null) return res.redirect('/')
-    const results = await client.query(`DELETE FROM articles
+    await client.query(`DELETE FROM articles
       WHERE id = ${req.params.id}`)
+    redisClient.del(`index_${req.session.passport.user}`)
     res.redirect('/')
   }catch{
     res.redirect('/')
@@ -71,14 +75,13 @@ router.get('/like/:id', checkService, async(req, res)=>{
     let likes = article.likes
     let userLikes = (article.likes_user == null) ? [] : article.likes_user
     if (userLikes.indexOf(req.session.passport.user) !== -1){
-      const update = await client.query(`UPDATE articles SET likes = ${likes-1},
+      await client.query(`UPDATE articles SET likes = ${likes-1},
       likes_user = array_remove(likes_user, ${req.session.passport.user}) WHERE id = ${req.params.id};`) 
     }
     else{
-      const update = await client.query(`UPDATE articles SET likes = ${likes+1},
+      await client.query(`UPDATE articles SET likes = ${likes+1},
       likes_user = likes_user || ${req.session.passport.user} WHERE id = ${req.params.id};`) 
     }
-    const user = {id: req.session.passport.user}
     res.redirect(`/articles/show/${req.params.id}`)
   }catch{
     res.redirect('/')
